@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>デジタルエンタメ生存適性診断 | サバイバル講座 第13回</title>
+<style>
+  :root {
+    --bg-color: #0b0c10;
+    --card-bg: #1f2833;
+    --text-main: #c5c6c7;
+    --accent-red: #ff3860;
+    --accent-orange: #ff7e47;
+    --accent-cyan: #66fcf1;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif; }
+  body {
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .container {
+    background: var(--card-bg);
+    border: 1px solid #333;
+    border-radius: 12px;
+    max-width: 600px;
+    width: 100%;
+    padding: 28px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.7), 0 0 15px rgba(255, 56, 96, 0.2);
+  }
+  .header {
+    text-align: center;
+    margin-bottom: 24px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 16px;
+  }
+  .header h1 {
+    font-size: 1.3rem;
+    color: #fff;
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+  }
+  .header p {
+    font-size: 0.85rem;
+    color: var(--accent-orange);
+    font-weight: bold;
+  }
+  .progress-bar {
+    height: 4px;
+    background: #333;
+    border-radius: 2px;
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 20%;
+    background: linear-gradient(90deg, var(--accent-red), var(--accent-orange));
+    transition: width 0.3s ease;
+  }
+  .q-title {
+    font-size: 1.05rem;
+    color: #fff;
+    margin-bottom: 18px;
+    line-height: 1.5;
+  }
+  .q-tag {
+    display: inline-block;
+    background: var(--accent-red);
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    font-weight: bold;
+  }
+  .btn-choice {
+    display: block;
+    width: 100%;
+    background: #121820;
+    border: 1px solid #3d4a56;
+    color: var(--text-main);
+    padding: 14px 16px;
+    border-radius: 8px;
+    text-align: left;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-choice:hover {
+    border-color: var(--accent-cyan);
+    background: #1a232f;
+    color: #fff;
+    transform: translateY(-2px);
+  }
+  #result-screen { display: none; text-align: center; }
+  .result-badge {
+    display: inline-block;
+    padding: 6px 16px;
+    background: var(--accent-orange);
+    color: #fff;
+    font-weight: bold;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    margin-bottom: 12px;
+  }
+  .result-title {
+    font-size: 1.4rem;
+    color: #fff;
+    margin-bottom: 16px;
+  }
+  .result-desc {
+    background: #121820;
+    border-left: 4px solid var(--accent-cyan);
+    padding: 16px;
+    text-align: left;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 24px;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+  .advice-box {
+    background: rgba(255, 56, 96, 0.1);
+    border: 1px solid var(--accent-red);
+    padding: 16px;
+    border-radius: 8px;
+    text-align: left;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  .advice-box strong { color: var(--accent-red); }
+  .btn-restart {
+    background: linear-gradient(90deg, var(--accent-red), var(--accent-orange));
+    color: #fff;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>武器のメタ認知診断</h1>
+    <p>サバイバル講座 第13回「スマホアプリ業界の現在地」</p>
+  </div>
+
+  <div id="quiz-screen">
+    <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+    <span class="q-tag" id="q-number">QUESTION 1 / 5</span>
+    <div class="q-title" id="q-text">質問テキスト</div>
+    <div id="choices-container"></div>
+  </div>
+
+  <div id="result-screen">
+    <span class="result-badge">診断結果</span>
+    <h2 class="result-title" id="res-title">ルート名</h2>
+    <div class="result-desc" id="res-desc">解説テキスト</div>
+    <div class="advice-box" id="res-advice">アドバイス</div>
+    <button class="btn-restart" onclick="restartQuiz()">もう一度診断する</button>
+  </div>
+</div>
+
+<script>
+const questions = [
+  {
+    tag: "Q1. 開発の動機",
+    text: "ゲームを作っていて「最も快感を感じる瞬間」は？",
+    choices: [
+      { text: "A. AIで作ったモックを市場に投げて、数字（CTR/CPI）が跳ねた瞬間", type: 1 },
+      { text: "B. 誰も思いつかない偏執的なシステムや世界観がバチッと噛み合った瞬間", type: 2 },
+      { text: "C. 配信者が絶叫したり、視聴者がコメント欄で大騒ぎしているのを見た瞬間", type: 3 },
+      { text: "D. プラットフォームの規約や決済の抜け道を突いて、高利益率を叩き出した瞬間", type: 4 },
+      { text: "E. 安定した受託や仕事で給与を確保し、ノーリスクで自作ゲームを触っている瞬間", type: 5 }
+    ]
+  },
+  {
+    tag: "Q2. 失敗への対応",
+    text: "意気揚々とリリースした新作が「初週で大爆死」。あなたの次の行動は？",
+    choices: [
+      { text: "A. サンクコストはゼロ。即日損切りして、翌朝には別のモックを試す", type: 1 },
+      { text: "B. コア層のレビューを熟読し、Steamアプデで狂気的な深掘り修正を施す", type: 2 },
+      { text: "C. ゲームの最もリアクションが取れる数秒を切り抜いてTikTokに投稿しまくる", type: 3 },
+      { text: "D. ゲーム内価格や課金導線、外部Webショップの特典をいじって粗利を改善する", type: 4 },
+      { text: "E. 痛手はない。本業の受託開発に集中し、次の仕込み時期を冷静に待つ", type: 5 }
+    ]
+  },
+  {
+    tag: "Q3. 生成AIの使い方",
+    text: "2026年、生成AIを最も活かせるあなたのスタイルは？",
+    choices: [
+      { text: "A. アイデア出し・コード・バナーをAIに丸投げし、1週間で10本モックを量産する", type: 1 },
+      { text: "B. 自分の「毒（こだわり）」を崩さないよう、アセット制作の作業短縮だけに限定活用する", type: 2 },
+      { text: "C. 配信映えするサムネイルや、ショート動画の台本・切り抜き編集をAIに自動化させる", type: 3 },
+      { text: "D. 利用規約、海外法務、外部決済ツールのAPI連携など実務・バックエンドを高速化する", type: 4 },
+      { text: "E. チーム全体の受託案件工数をAIで半減させ、自社開発の浮き時間を創出する", type: 5 }
+    ]
+  },
+  {
+    tag: "Q4. 集客の壁",
+    text: "「広告費は1円もない」。どうやって最初の1,000人に届けますか？",
+    choices: [
+      { text: "A. 直感的な動画広告モックを作り、オーガニックで回るアルゴリズムをハックする", type: 1 },
+      { text: "B. Steam Next Festや特定コミュニティに尖った体験版を投下し、信者を作る", type: 2 },
+      { text: "C. 底辺配信者でもネタにしやすい「ツッコミどころ満載の怪作」として見せる", type: 3 },
+      { text: "D. 特定のコミュニティ（Discordや成人向け等）に限定特典付きで直接案内する", type: 4 },
+      { text: "E. 既存の取引先や提携パブリッシャーの公式チャンネル・ネットワークを頼る", type: 5 }
+    ]
+  },
+  {
+    tag: "Q5. 30年後の生存哲学",
+    text: "残酷な業界で「30年後も飯を食えている」ために、一番信じられるのは？",
+    choices: [
+      { text: "A. 市場データと回転速度。需要がある場所へ最速で移動し続ける身軽さ", type: 1 },
+      { text: "B. 代替不可能な作家性。どんなに時代が変わっても買いたくなる「毒」", type: 2 },
+      { text: "C. 時代のメディア（配信・SNS）の空気を読み、大衆の目を奪う企画力", type: 3 },
+      { text: "D. ルールと仕組みのハック。手数料や中間搾取を最小限に抑える商才", type: 4 },
+      { text: "E. 無借金とキャッシュフロー。大博打を避け、打席に立ち続ける組織の体力", type: 5 }
+    ]
+  }
+];
+
+const results = {
+  1: {
+    title: "【ルート①】ハイカジ・超速回転モデル",
+    desc: "あなたは感情を排除して確率をハックできる「科学者タイプ」です。カヤックの新卒チームのように、AIを壁打ち相手に95%のボツを恐れず、市場の数字（CPI/CTR）だけを信じて高速で検証を回す戦法が最も適しています。",
+    advice: "<strong>張Pからの助言：</strong>作品に愛着を持ちすぎると死にます。「3日で捨てられる冷徹さ」を維持し、数字が出た5%だけに全力投球してください。"
+  },
+  2: {
+    title: "【ルート②】Steam先行・二段構えモデル",
+    desc: "あなたは妥協できない美学を持つ「求道者・職人タイプ」です。最初からスマホのレッドオーシャンに飛び込むと即死します。まずSteamで『バラトロ』や『都市伝説解体センター』のように熱狂的なファン（毒）を作り、半年以内にスマホへ刈り取りに行くのが唯一の勝ち筋です。",
+    advice: "<strong>張Pからの助言：</strong>スマホだけで完結させようとしないでください。Steamで1,000人の信者を作り、その熱狂を引き連れてスマホに入国しましょう。"
+  },
+  3: {
+    title: "【ルート③】配信者バイラル特化モデル",
+    desc: "あなたは時代の空気を読める「プロデューサー気質」です。『8番出口』や『スイカゲーム』のように、プレイの面白さ以上に「見ている人がリアクションできるか」を最優先に設計し、YouTuberやTikTokerを無料の営業マンに変えるゲリラ戦が向いています。",
+    advice: "<strong>張Pからの助言：</strong>説明書が必要なゲームはNGです。「0.5秒で何が起きているかわかる絵面」と「ツッコミどころ」を意図的に仕込んでください。"
+  },
+  4: {
+    title: "【ルート④】手数料30%回避・DtoCモデル",
+    desc: "あなたはゲームの外側で勝負できる「商人（ビジネス）タイプ」です。AppleやGoogleに売上の30%を差し出すのをやめ、Web決済誘導やDiscord直販、法改正の波を捉えて「手残りの利益率」を最大化する戦い方が最も合っています。",
+    advice: "<strong>張Pからの助言：</strong>100万DLを目指す必要はありません。濃いファン1,000人から直接収益を得る仕組みを作り、営業利益率80%超を目指してください。"
+  },
+  5: {
+    title: "【ルート⑤】受託×自社ハイブリッドモデル",
+    desc: "あなたは生き残りの本質を知る「リアリスト・経営者タイプ」です。キューマックスが38年無借金で生き残ってきたように、受託開発で会社の固定費を100%賄いながら、余力でオリジナルを狙う『絶対に死なない布陣』が最強の武器です。",
+    advice: "<strong>張Pからの助言：</strong>一発逆転のギャンブルは不要です。「死なない状態」を作った者だけが、次のメガヒットに出会うまで打席に立ち続けられます。"
+  }
+};
+
+let currentQ = 0;
+let scores = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+
+function renderQuestion() {
+  const q = questions[currentQ];
+  document.getElementById("q-number").innerText = `QUESTION ${currentQ + 1} / ${questions.length}`;
+  document.getElementById("q-text").innerText = q.text;
+  document.getElementById("progress").style.width = `${((currentQ + 1) / questions.length) * 100}%`;
+  
+  const container = document.getElementById("choices-container");
+  container.innerHTML = "";
+  q.choices.forEach(c => {
+    const btn = document.createElement("button");
+    btn.className = "btn-choice";
+    btn.innerText = c.text;
+    btn.onclick = () => selectChoice(c.type);
+    container.appendChild(btn);
+  });
+}
+
+function selectChoice(type) {
+  scores[type]++;
+  currentQ++;
+  if (currentQ < questions.length) {
+    renderQuestion();
+  } else {
+    showResult();
+  }
+}
+
+function showResult() {
+  document.getElementById("quiz-screen").style.display = "none";
+  document.getElementById("result-screen").style.display = "block";
+  
+  // 最多得点のルートを判定
+  let topType = 1;
+  let maxScore = -1;
+  for (let t in scores) {
+    if (scores[t] > maxScore) {
+      maxScore = scores[t];
+      topType = t;
+    }
+  }
+
+  const res = results[topType];
+  document.getElementById("res-title").innerText = res.title;
+  document.getElementById("res-desc").innerText = res.desc;
+  document.getElementById("res-advice").innerHTML = res.advice;
+}
+
+function restartQuiz() {
+  currentQ = 0;
+  scores = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  document.getElementById("quiz-screen").style.display = "block";
+  document.getElementById("result-screen").style.display = "none";
+  renderQuestion();
+}
+
+// 初期化
+renderQuestion();
+</script>
+</body>
+</html>
